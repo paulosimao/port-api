@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package =" techtest/lib/proto";
+
+service PortDb {
+
+  rpc PutPort (PortData) returns (PutPortRes) {}
+  rpc GetPorts (GetRequest) returns (stream PortData) {}
+}
+
+// The request message containing the user's name.
+message PortData {
+  string code = 1;
+  string data = 2;
+}
+
+message PutPortRes {
+
+  }
+
+message GetRequest{
+
+}

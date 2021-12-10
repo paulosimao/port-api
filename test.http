@@ -1,0 +1,7 @@
+###
+# @name GET
+GET http://localhost:8080/get
+
+###
+# @name POST
+GET http://localhost:8080/put

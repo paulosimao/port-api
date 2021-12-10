@@ -1,0 +1,27 @@
+services:
+  server:
+    build: ./server
+    volumes:
+     - "data:/data"
+    networks:
+      - back-tier
+
+  cli:
+    build: ./cli
+    depends_on:
+      - server
+    volumes:
+      - "infile:/in"
+    ports:
+      - "8080:8080"
+    networks:
+      - back-tier
+
+ 
+
+volumes:
+  data:
+  infile:
+
+networks:
+  back-tier:
