@@ -17,3 +17,4 @@ Caveats:
 ## 3:15
     Added Signal Handling
     Fixed cancel handling
+    Fixed docker-compose, due to M1 constraint
