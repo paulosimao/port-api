@@ -13,3 +13,7 @@ Caveats:
     - The format of using s json string for nested data was a quick wayout considering time constraints. In an ideal world, this would be different, either flattening the object to fit into a SQL DB, or using NoSql like Mongo
     - The format adopted to upload data does not help too much, considering that its a KV object. Streaming under these conditions is harder to achieve. So, either we adopt a different format (jsonlines maybe), or we do the parser ourselves. Having said that - the present solution will not fit into memory constrained env, if a too large file is provided. We are limiting files to 10 MB at this stage.
     - Design around DB VOs and ProtoBuffer TOs could be better
+# Journal
+## 3:15
+    Added Signal Handling
+    Fixed cancel handling

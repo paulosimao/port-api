@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	pb "github.com/paulosimao/ports-api/lib/proto"
@@ -74,9 +76,9 @@ func handleUploadFile(w http.ResponseWriter, r *http.Request) {
 			}
 
 			port := &pb.PortData{Code: k, Data: string(datastr)}
-			ctx, _ := context.WithTimeout(context.Background(), time.Second*15)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 			_, err = client.PutPort(ctx, port)
-
+			cancel()
 			if IfErr(w, err) {
 
 				return
@@ -96,9 +98,9 @@ func handleGetPorts(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	cli, err := client.GetPorts(ctx, &pb.GetRequest{})
-
+	cancel()
 	if IfErr(rw, err) {
 		return
 	}
@@ -142,5 +144,19 @@ func Run() error {
 		}
 	})
 
-	return http.ListenAndServe(os.Getenv("ADDR"), nil)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	server := &http.Server{Addr: os.Getenv("ADDR"), Handler: http.DefaultServeMux}
+	go func() {
+		<-sigs
+		log.Printf("Gracefully stopping")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			log.Printf("Error shutting down server: %s", err.Error())
+		}
+
+	}()
+
+	return server.ListenAndServe()
 }

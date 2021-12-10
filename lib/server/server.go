@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/paulosimao/ports-api/lib/db"
 	pb "github.com/paulosimao/ports-api/lib/proto"
@@ -59,8 +61,20 @@ func Run() error {
 	s := grpc.NewServer()
 	pb.RegisterPortDbServer(s, &server{})
 	log.Printf("server listening at %v", lis.Addr())
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		log.Printf("Gracefully stopping")
+		s.GracefulStop()
+
+	}()
+
 	if err := s.Serve(lis); err != nil {
 		return err
 	}
+	db.Close()
 	return nil
 }

@@ -2,6 +2,8 @@
 package db
 
 import (
+	"log"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,6 +19,7 @@ type Port struct {
 func Init() error {
 	var err error
 	db, err = gorm.Open(sqlite.Open("data/techtest.db"), &gorm.Config{})
+
 	if err != nil {
 		return err
 	}
@@ -43,17 +46,32 @@ func PutPort(p *Port) error {
 func GetPorts() chan *Port {
 	ret := make(chan *Port)
 	go func() {
+		close(ret)
 		var port *Port
 		rows, err := db.Model(&Port{}).Rows()
-		defer rows.Close()
 		if err != nil {
-			panic(err)
+			log.Printf("Error getting ports: %s", err.Error())
+			return
 		}
+		defer rows.Close()
+
 		for rows.Next() {
 			db.ScanRows(rows, &port)
 			ret <- port
 		}
-		close(ret)
+
 	}()
 	return ret
+}
+
+func Close() {
+	rdb, err := db.DB()
+	if err != nil {
+		log.Printf("Error closing db: %s", err.Error())
+		return
+	}
+	err = rdb.Close()
+	if err != nil {
+		log.Printf("Error closing db: %s", err.Error())
+	}
 }
