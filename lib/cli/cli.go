@@ -74,9 +74,9 @@ func handleUploadFile(w http.ResponseWriter, r *http.Request) {
 			}
 
 			port := &pb.PortData{Code: k, Data: string(datastr)}
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+			ctx, _ := context.WithTimeout(context.Background(), time.Second*15)
 			_, err = client.PutPort(ctx, port)
-			cancel()
+
 			if IfErr(w, err) {
 
 				return
@@ -96,9 +96,9 @@ func handleGetPorts(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*15)
 	cli, err := client.GetPorts(ctx, &pb.GetRequest{})
-	cancel()
+
 	if IfErr(rw, err) {
 		return
 	}
@@ -130,49 +130,6 @@ func Run() error {
 	}
 
 	http.HandleFunc("/get", handleGetPorts)
-
-	http.HandleFunc("/put", func(rw http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		client, err := Cli()
-		if IfErr(rw, err) {
-			return
-		}
-
-		f, err := os.OpenFile("in/ports.json", os.O_RDONLY, 0600)
-		if IfErr(rw, err) {
-			return
-		}
-		dec := json.NewDecoder(f)
-
-		//Considering we may get a stream of map code:port objects
-		//It would be better to put code insde of the object and use an array like format
-		//then we could stream one by one, instead of reading all in memory
-		//if the format is a strong requirement, then a more elaborated parser will be required
-		for dec.More() {
-			in := make(map[string]interface{})
-			err = dec.Decode(&in)
-			if IfErr(rw, err) {
-				return
-			}
-			for k, v := range in {
-
-				datastr, err := json.Marshal(v)
-				if IfErr(rw, err) {
-					return
-				}
-
-				port := &pb.PortData{Code: k, Data: string(datastr)}
-				ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-				_, err = client.PutPort(ctx, port)
-				cancel()
-				if IfErr(rw, err) {
-					return
-				}
-
-			}
-		}
-
-	})
 
 	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		switch r.Method {

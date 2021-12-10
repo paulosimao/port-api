@@ -26,7 +26,7 @@ test_down:
 tests: test_up test_down
 
 run_server:
-	go run ./cmd/server/main.go
+	cd stage && ADDR=:50052 go run ../cmd/server/main.go
 
 run_cli:
-	go run ./cmd/cli/main.go
+	cd stage && ADDR=:8080 GRPC_ADDR=localhost:50052 go run ../cmd/cli/main.go
