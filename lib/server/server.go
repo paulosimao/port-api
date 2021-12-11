@@ -30,13 +30,8 @@ func (s *server) PutPort(ctx context.Context, in *pb.PortData) (*pb.PutPortRes, 
 func (s *server) GetPorts(req *pb.GetRequest, svc pb.PortDb_GetPortsServer) error {
 	log.Printf("Getting ports")
 	chports := db.GetPorts()
-	ok := true
-	var data *db.Port
-	for ok {
-		data, ok = <-chports
-		if !ok {
-			return nil
-		}
+
+	for data := range chports {
 		err := svc.Send(&pb.PortData{Code: data.Code, Data: data.Data})
 		if err != nil {
 			return err
